@@ -669,55 +669,301 @@ Uptime: ${moment.duration(Date.now() - config.startTime).humanize()}
 }
 
 // ============================================================
-// 🔐 ĐĂNG NHẬP FACEBOOK VÀ TỰ ĐỘNG RECONNECT
+// 🔐 ĐĂNG NHẬP FACEBOOK + RECONNECT AN TOÀN
 // ============================================================
-let appState;
-try {
-    appState = JSON.parse(process.env.APPSTATE);
-    if (!Array.isArray(appState) || !appState.length) throw new Error();
-} catch(e) {
-    console.error('❌ APPSTATE không hợp lệ.');
-    process.exit(1);
-}
 
 let apiInstance = null;
+let reconnectTimer = null;
+let isConnecting = false;
+let isListening = false;
+
+// Đọc APPSTATE từ Environment Variable
+function getAppState() {
+    try {
+        const raw = process.env.APPSTATE;
+
+        if (!raw) {
+            throw new Error('Không tìm thấy biến môi trường APPSTATE');
+        }
+
+        const parsed = JSON.parse(raw);
+
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+            throw new Error('APPSTATE phải là một mảng JSON không rỗng');
+        }
+
+        // Kiểm tra cookie cơ bản
+        const requiredCookies = ['c_user', 'xs'];
+        const cookieKeys = parsed.map(c => c.key);
+
+        for (const key of requiredCookies) {
+            if (!cookieKeys.includes(key)) {
+                throw new Error(`APPSTATE thiếu cookie bắt buộc: ${key}`);
+            }
+        }
+
+        console.log(`🍪 APPSTATE hợp lệ: ${parsed.length} cookies`);
+
+        return parsed;
+
+    } catch (error) {
+        console.error('❌ APPSTATE lỗi:', error.message);
+        return null;
+    }
+}
+
+
+// ============================================================
+// 🎧 LẮNG NGHE MQTT
+// ============================================================
 
 function startListening(api) {
+
+    if (isListening) {
+        console.log('⚠️ MQTT listener đã chạy, bỏ qua.');
+        return;
+    }
+
+    isListening = true;
     apiInstance = api;
-    console.log(`👂 ${BOT_NAME} đang lắng nghe MQTT...`);
-    api.listenMqtt((err, msg) => {
+
+    console.log(`👂 ${BOT_NAME} đang lắng nghe tin nhắn...`);
+
+    api.listenMqtt(async (err, msg) => {
+
         if (err) {
-            console.error(`❌ MQTT lỗi (${BOT_NAME}):`, err);
-            logToFile(`MQTT lỗi: ${err}`);
-            setTimeout(() => {
-                console.log(`🔄 ${BOT_NAME} đang kết nối lại MQTT...`);
-                startListening(apiInstance);
-            }, 5000);
+
+            console.error(
+                `❌ MQTT lỗi (${BOT_NAME}):`,
+                err.errorDescription ||
+                err.errorSummary ||
+                err.message ||
+                err
+            );
+
+            logToFile(
+                `MQTT lỗi: ${JSON.stringify(err)}`
+            );
+
+            isListening = false;
+
+            scheduleReconnect();
+
             return;
         }
-        if (msg && msg.type === 'message') {
-            handleMessage(api, msg);
+
+        if (!msg) return;
+
+        if (msg.type === 'message') {
+
+            try {
+                await handleMessage(api, msg);
+
+            } catch (error) {
+
+                console.error(
+                    '❌ HANDLE MESSAGE:',
+                    error
+                );
+
+                logToFile(
+                    `HANDLE ERROR: ${error.stack || error}`
+                );
+            }
         }
     });
 }
 
-login({ appState }, (err, api) => {
-    if (err) {
-        console.error(`❌ ${BOT_NAME} login lỗi:`, err);
-        logToFile(`Login lỗi: ${err}`);
+
+// ============================================================
+// 🔄 TỰ ĐỘNG KẾT NỐI LẠI
+// ============================================================
+
+function scheduleReconnect() {
+
+    if (reconnectTimer) {
+        console.log('⏳ Đã có lịch reconnect.');
         return;
     }
-    console.log(`✅ ${BOT_NAME} đăng nhập thành công!`);
-    try {
-        api.setOptions({ listenEvents: true, selfListen: true, forceLogin: true });
-    } catch(e) {
-        console.warn(`⚠️ ${BOT_NAME} lỗi setOptions:`, e.message);
+
+    reconnectTimer = setTimeout(() => {
+
+        reconnectTimer = null;
+
+        console.log(
+            `🔄 ${BOT_NAME} đang thử kết nối lại...`
+        );
+
+        loginFacebook();
+
+    }, 10000);
+}
+
+
+// ============================================================
+// 🔑 LOGIN FACEBOOK
+// ============================================================
+
+function loginFacebook() {
+
+    if (isConnecting) {
+        console.log('⏳ Đang có một phiên đăng nhập.');
+        return;
     }
-    let botID = api.getCurrentUserID();
-    console.log(`🤖 ${BOT_NAME} ID: ${botID}`);
-    logToFile(`${BOT_NAME} khởi động, ID: ${botID}`);
-    startListening(api);
-});
+
+    isConnecting = true;
+
+    const appState = getAppState();
+
+    if (!appState) {
+
+        isConnecting = false;
+
+        console.error(
+            '❌ Không thể đăng nhập vì APPSTATE không hợp lệ.'
+        );
+
+        // Thử lại sau 30 giây
+        reconnectTimer = setTimeout(() => {
+
+            reconnectTimer = null;
+
+            loginFacebook();
+
+        }, 30000);
+
+        return;
+    }
+
+    console.log(
+        `🔐 ${BOT_NAME} đang đăng nhập Facebook...`
+    );
+
+    login(
+        {
+            appState: appState,
+
+            // Một số phiên cần các tùy chọn này
+            forceLogin: false,
+            listenEvents: true,
+            selfListen: true,
+
+            // Không tự động logout
+            autoMarkDelivery: false,
+            autoMarkRead: false
+        },
+
+        (err, api) => {
+
+            isConnecting = false;
+
+            if (err) {
+
+                console.error(
+                    `❌ ${BOT_NAME} đăng nhập thất bại:`
+                );
+
+                console.error(
+                    err.errorDescription ||
+                    err.errorSummary ||
+                    err.message ||
+                    err
+                );
+
+                logToFile(
+                    `LOGIN ERROR: ${JSON.stringify(err)}`
+                );
+
+                // Nếu Facebook trả về Not logged in
+                if (
+                    err.errorDescription === 'Not logged in' ||
+                    err.error === 1357004
+                ) {
+
+                    console.error(
+                        '⚠️ APPSTATE đã hết hạn hoặc Facebook từ chối phiên đăng nhập.'
+                    );
+
+                    console.error(
+                        '⚠️ Hãy lấy APPSTATE mới rồi cập nhật trên Render.'
+                    );
+                }
+
+                scheduleReconnect();
+
+                return;
+            }
+
+
+            // ================================================
+            // LOGIN THÀNH CÔNG
+            // ================================================
+
+            apiInstance = api;
+
+            console.log(
+                `✅ ${BOT_NAME} đăng nhập Facebook thành công!`
+            );
+
+            try {
+
+                api.setOptions({
+                    listenEvents: true,
+                    selfListen: true,
+                    autoMarkDelivery: false,
+                    autoMarkRead: false
+                });
+
+            } catch (e) {
+
+                console.warn(
+                    '⚠️ Không thể setOptions:',
+                    e.message
+                );
+            }
+
+
+            // Lấy UID bot
+            let botID = null;
+
+            try {
+                botID = api.getCurrentUserID();
+            } catch (e) {
+                console.warn(
+                    '⚠️ Không lấy được UID bot:',
+                    e.message
+                );
+            }
+
+
+            console.log(
+                `🤖 ${BOT_NAME} UID: ${botID || 'N/A'}`
+            );
+
+            logToFile(
+                `${BOT_NAME} LOGIN SUCCESS - UID: ${botID || 'N/A'}`
+            );
+
+
+            // Bắt đầu MQTT
+            startListening(api);
+        }
+    );
+}
+
+
+// ============================================================
+// 🚀 KHỞI ĐỘNG BOT
+// ============================================================
+
+console.log(`
+╔══════════════════════════════════════╗
+║       🤖 ${BOT_NAME} v${BOT_VERSION}
+║       🚀 ĐANG KHỞI ĐỘNG...
+╚══════════════════════════════════════╝
+`);
+
+loginFacebook();
 
 // ============================================================
 // 🛡️ XỬ LÝ LỖI TOÀN CỤC
