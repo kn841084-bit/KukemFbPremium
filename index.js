@@ -178,7 +178,7 @@ function getMainMenu(prefix) {
  📊 THỐNG KÊ:                                      
    ${prefix}stats – Thống kê bot                   
    ${prefix}topcmd – Lệnh dùng nhiều nhất          
-╚═══════════════════════════════════════════╝
+╚════════════════════════ ═════════╝
     `;
 }
 
