@@ -18,7 +18,7 @@
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "fca-project-origo": "^1.3.13",
+    "fca-liane": "^1.0.1",
     "moment": "^2.30.1"
   },
   "engines": {
