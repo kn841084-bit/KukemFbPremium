@@ -115,72 +115,69 @@ function muteUser(api, threadID, userID, minutes) {
 // ============================================================
 function getMainMenu(prefix) {
     return `
-╔═══════════════════════════════════════════╗
-║   🚀  ${BOT_NAME}  SIÊU CẤP VIP PRO               ║
-╠═══════════════════════════════════════════╣
-║  Prefix: ${prefix}                               ║
-║  Admin: ${config.adminIDs.length} người          ║
-║  Nhóm: ${Object.keys(stats).length}              ║
-╠═══════════════════════════════════════════╣
-║ 📋 LỆNH CƠ BẢN:                                   ║
-║   ${prefix}help   – Menu chi tiết                 ║
-║   ${prefix}info   – Thông tin bot                 ║
-║   ${prefix}ping   – Kiểm tra ping                 ║
-║   ${prefix}uptime – Thời gian hoạt động           ║
-║   ${prefix}prefix – Xem/đổi tiền tố               ║
-║   ${prefix}restart– Khởi động lại (admin)         ║
-╠═══════════════════════════════════════════╣
-║ 👤 NGƯỜI DÙNG:                                   ║
-║   ${prefix}profile – Hồ sơ cá nhân               ║
-║   ${prefix}top    – Bảng xếp hạng tương tác      ║
-║   ${prefix}daily  – Điểm danh nhận thưởng        ║
-║   ${prefix}rank   – Cấp bậc của bạn              ║
-║   ${prefix}bal    – Số dư tiền ảo                ║
-╠═══════════════════════════════════════════╣
-║ 🛡️ QUẢN TRỊ (ADMIN):                             ║
-║   ${prefix}admin add @tag – Thêm admin           ║
-║   ${prefix}admin del @tag – Xóa admin            ║
-║   ${prefix}mute @tag [phút]                      ║
-║   ${prefix}unmute @tag                           ║
-║   ${prefix}ban @tag   – Cấm người dùng           ║
-║   ${prefix}unban @tag – Bỏ cấm                   ║
-║   ${prefix}log      – Đặt nhóm log               ║
-║   ${prefix}broadcast [tin nhắn] – Gửi tin        ║
-╠══════════════════════════════════════════╣
-║ 🛡️ CHỐNG SPAM & BẢO VỆ:                          ║
-║   ${prefix}antispam on/off                       ║
-║   ${prefix}antiword [từ] – Thêm từ cấm           ║
-║   ${prefix}whitelist add @tag                    ║
-╠═══════════════════════════════════════════╣
-║ 🧠 AI & TIỆN ÍCH:                                 ║
-║   ${prefix}ai [câu hỏi] – Hỏi AI                  ║
-║   ${prefix}translate [văn bản] – Dịch             ║
-║   ${prefix}weather [địa điểm] – Thời tiết         ║
-║   ${prefix}shorten [url] – Rút gọn link           ║
-║   ${prefix}qr [nội dung] – Tạo mã QR              ║
-╠═══════════════════════════════════════════╣
-║ 🎮 MINI GAME:                                     ║
-║   ${prefix}dice   – Tung xúc xắc                  ║
-║   ${prefix}coin   – Tung đồng xu                  ║
-║   ${prefix}guess  – Đoán số (1-100)               ║
-║   ${prefix}quiz   – Câu đố vui                    ║
-║   ${prefix}reaction – Kiểm tra phản xạ            ║
-╠═══════════════════════════════════════════╣
-║ 💰 KINH TẾ ẢO:                                    ║
-║   ${prefix}bal    – Xem số dư                     ║
-║   ${prefix}transfer @tag [số] – Chuyển            ║
-║   ${prefix}shop   – Cửa hàng                      ║
-║   ${prefix}buy [mã] – Mua vật phẩm                ║
-║   ${prefix}inventory – Kho đồ                     ║
-╠═══════════════════════════════════════════╣
-║ 🔎 TÌM KIẾM:                                     ║
-║   ${prefix}wiki [từ khóa] – Wikipedia            ║
-║   ${prefix}calc [biểu thức] – Máy tính           ║
-║   ${prefix}time [múi giờ] – Thời gian            ║
-╠═══════════════════════════════════════════╣
-║ 📊 THỐNG KÊ:                                      ║
-║   ${prefix}stats – Thống kê bot                   ║
-║   ${prefix}topcmd – Lệnh dùng nhiều nhất          ║
+
+   🚀  ${BOT_NAME}  Kukem             
+  Prefix: ${prefix}                               
+  Admin: ${config.adminIDs.length} người          
+  Nhóm: ${Object.keys(stats).length} 
+  ------------------------------------
+ 📋 LỆNH CƠ BẢN:                                   
+    ${prefix}help   – Menu chi tiết                 
+    ${prefix}info   – Thông tin bot                 
+    ${prefix}ping   – Kiểm tra ping                 
+    ${prefix}uptime – Thời gian hoạt động           
+    ${prefix}prefix – Xem/đổi tiền tố               
+    ${prefix}restart– Khởi động lại (admin) 
+    -----------------------------------
+ 👤 NGƯỜI DÙNG:                                   
+   ${prefix}profile – Hồ sơ cá nhân               
+   ${prefix}top    – Bảng xếp hạng tương tác      
+   ${prefix}daily  – Điểm danh nhận thưởng        
+   ${prefix}rank   – Cấp bậc của bạn
+   -----------------------------------
+ 🛡️ QUẢN TRỊ (ADMIN):                             
+   ${prefix}admin add @tag – Thêm admin           
+   ${prefix}admin del @tag – Xóa admin            
+   ${prefix}mute @tag [phút]                      
+   ${prefix}unmute @tag                           
+   ${prefix}ban @tag   – Cấm người dùng           
+   ${prefix}unban @tag – Bỏ cấm                   
+   ${prefix}log      – Đặt nhóm log               
+   ${prefix}broadcast [tin nhắn] – Gửi tin        
+   ---------------------------------------
+ 🛡️ CHỐNG SPAM & BẢO VỆ:                          
+   ${prefix}antispam on/off                       
+   ${prefix}antiword [từ] – Thêm từ cấm           
+   ${prefix}whitelist add @tag                    
+   --------------------------------------
+ 🧠 AI & TIỆN ÍCH:                                 
+   ${prefix}ai [câu hỏi] – Hỏi AI                  
+   ${prefix}translate [văn bản] – Dịch             
+   ${prefix}weather [địa điểm] – Thời tiết         
+   ${prefix}shorten [url] – Rút gọn link           
+   ${prefix}qr [nội dung] – Tạo mã QR
+   ------------------------------------
+ 🎮 MINI GAME:                                     
+   ${prefix}dice   – Tung xúc xắc                  
+   ${prefix}coin   – Tung đồng xu                  
+   ${prefix}guess  – Đoán số (1-100)               
+   ${prefix}quiz   – Câu đố vui                    
+   ${prefix}reaction – Kiểm tra phản xạ
+   ------------------------------------
+ 💰 KINH TẾ ẢO:                                    
+   ${prefix}bal    – Xem số dư
+   ${prefix}shop   – Cửa hàng                      
+   ${prefix}buy [mã] – Mua vật phẩm                
+   ${prefix}inventory – Kho đồ
+   ----------------------------------
+ 🔎 TÌM KIẾM:                                     
+   ${prefix}wiki [từ khóa] – Wikipedia            
+   ${prefix}calc [biểu thức] – Máy tính           
+   ${prefix}time [múi giờ] – Thời gian 
+   -----------------------------------
+ 📊 THỐNG KÊ:                                      
+   ${prefix}stats – Thống kê bot                   
+   ${prefix}topcmd – Lệnh dùng nhiều nhất          
 ╚═══════════════════════════════════════════╝
     `;
 }
