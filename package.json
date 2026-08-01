@@ -9,16 +9,15 @@
   "keywords": [
     "facebook-bot",
     "messenger-bot",
-    "fca",
     "render"
   ],
   "author": "Kukem",
   "license": "ISC",
   "dependencies": {
+    "@dongdev/fca-unofficial": "^4.0.3",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "fca-liane": "^1.0.1",
     "moment": "^2.30.1"
   },
   "engines": {
