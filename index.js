@@ -550,52 +550,159 @@ async function handleMessage(api, message) {
         }
 
         // --- 🛡️ MODULE 5: BẢO VỆ NHÓM ---
-        if (cmd === 'antispam') {
+const spamTracker = new Map();
+
+const SPAM_LIMIT = 10;
+const SPAM_TIME = 10000;
+
+function checkAntiSpam(senderID, threadID) {
+    const key = `${threadID}_${senderID}`;
+    const now = Date.now();
+
+    let data = spamTracker.get(key);
+
+    if (!data || now - data.firstMessage > SPAM_TIME) {
+        data = {
+            firstMessage: now,
+            count: 1
+        };
+
+        spamTracker.set(key, data);
+        return false;
+    }
+
+    data.count++;
+    spamTracker.set(key, data);
+
+    if (data.count >= SPAM_LIMIT) {
+        spamTracker.delete(key);
+        return true;
+    }
+
+    return false;
+}
+
+function containsLink(text) {
+    if (!text) return false;
+
+    return /(https?:\/\/[^\s]+|www\.[^\s]+|facebook\.com\/[^\s]+|fb\.me\/[^\s]+)/i.test(text);
+}
+        if (settings.anti_spam && event.body) {
     if (!isSubAdmin(senderID)) {
-        return api.sendMessage('❌ Bạn không có quyền sử dụng lệnh này!', threadID);
+        if (checkAntiSpam(senderID, threadID)) {
+            return api.sendMessage(
+                `⚠️ CẢNH BÁO ANTI-SPAM\n\n` +
+                `👤 Người gửi: ${senderID}\n` +
+                `🚫 Bạn đang gửi tin nhắn quá nhanh!`,
+                threadID
+            );
+        }
+    }
+}
+
+if (settings.anti_link && event.body) {
+    if (!isSubAdmin(senderID)) {
+        if (containsLink(event.body)) {
+            return api.sendMessage(
+                `🔗 CẢNH BÁO ANTI-LINK\n\n` +
+                `👤 Người gửi: ${senderID}\n` +
+                `🚫 Nhóm không cho phép gửi liên kết!`,
+                threadID
+            );
+        }
+    }
+}
+        // ==========================================
+// 🛡️ LỆNH ANTISPAM
+// ==========================================
+
+if (cmd === 'antispam') {
+
+    if (!isSubAdmin(senderID)) {
+        return api.sendMessage(
+            '❌ Bạn không có quyền sử dụng lệnh này!',
+            threadID
+        );
     }
 
     const status = (args[0] || '').toLowerCase();
 
     if (status !== 'on' && status !== 'off') {
+
         return api.sendMessage(
-            '📌 Cách dùng:\n' +
-            `${prefix}antispam on - Bật Anti-Spam\n` +
-            `${prefix}antispam off - Tắt Anti-Spam`,
+            `🛡️ ANTI-SPAM\n\n` +
+            `📌 Cách sử dụng:\n\n` +
+            `${prefix}antispam on\n` +
+            `➡️ Bật Anti-Spam 🟢\n\n` +
+            `${prefix}antispam off\n` +
+            `➡️ Tắt Anti-Spam 🔴\n\n` +
+            `📊 Giới hạn: ${SPAM_LIMIT} tin / ${SPAM_TIME / 1000} giây`,
             threadID
         );
     }
 
     settings.anti_spam = status === 'on';
-    saveJSON(SETTINGS_FILE, settings);
+
+    saveJSON(
+        SETTINGS_FILE,
+        settings
+    );
 
     return api.sendMessage(
-        `🛡️ Anti-Spam: ${settings.anti_spam ? 'BẬT 🟢' : 'TẮT 🔴'}`,
+        `🛡️ ANTI-SPAM\n\n` +
+        `📌 Trạng thái: ${
+            settings.anti_spam
+                ? 'BẬT 🟢'
+                : 'TẮT 🔴'
+        }\n\n` +
+        `📊 Giới hạn: ${SPAM_LIMIT} tin / ${SPAM_TIME / 1000} giây`,
         threadID
     );
 }
 
+
+// ==========================================
+// 🔗 LỆNH ANTILINK
+// ==========================================
+
 if (cmd === 'antilink') {
+
     if (!isSubAdmin(senderID)) {
-        return api.sendMessage('❌ Bạn không có quyền sử dụng lệnh này!', threadID);
+        return api.sendMessage(
+            '❌ Bạn không có quyền sử dụng lệnh này!',
+            threadID
+        );
     }
 
     const status = (args[0] || '').toLowerCase();
 
     if (status !== 'on' && status !== 'off') {
+
         return api.sendMessage(
-            '📌 Cách dùng:\n' +
-            `${prefix}antilink on - Bật Anti-Link\n` +
-            `${prefix}antilink off - Tắt Anti-Link`,
+            `🔗 ANTI-LINK\n\n` +
+            `📌 Cách sử dụng:\n\n` +
+            `${prefix}antilink on\n` +
+            `➡️ Bật Anti-Link 🟢\n\n` +
+            `${prefix}antilink off\n` +
+            `➡️ Tắt Anti-Link 🔴`,
             threadID
         );
     }
 
     settings.anti_link = status === 'on';
-    saveJSON(SETTINGS_FILE, settings);
+
+    saveJSON(
+        SETTINGS_FILE,
+        settings
+    );
 
     return api.sendMessage(
-        `🛡️ Anti-Link: ${settings.anti_link ? 'BẬT 🟢' : 'TẮT 🔴'}`,
+        `🔗 ANTI-LINK\n\n` +
+        `📌 Trạng thái: ${
+            settings.anti_link
+                ? 'BẬT 🟢'
+                : 'TẮT 🔴'
+        }`,
         threadID
     );
 }
