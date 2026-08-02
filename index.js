@@ -327,7 +327,7 @@ async function handleMessage(api, message) {
                 const replies = [
                     `${BOT_NAME} nghe đây! Bạn cần trợ giúp gì? Gõ ${prefix}help nhé!`,
                     `Dạ, em nghe nè! 🚀`,
-                    `Gọi em có việc gì thế? 😊`
+                    `mày gay à !?😊`
                 ];
                 api.sendMessage(replies[Math.floor(Math.random() * replies.length)], threadID);
             }
@@ -551,19 +551,54 @@ async function handleMessage(api, message) {
 
         // --- 🛡️ MODULE 5: BẢO VỆ NHÓM ---
         if (cmd === 'antispam') {
-            if (!isSubAdmin(senderID)) return;
-            settings.anti_spam = args[0] === 'on';
-            saveJSON(SETTINGS_FILE, settings);
-            return api.sendMessage(`🛡️ Anti-Spam: ${settings.anti_spam ? 'BẬT 🟢' : 'TẮT 🔴'}`, threadID);
-        }
+    if (!isSubAdmin(senderID)) {
+        return api.sendMessage('❌ Bạn không có quyền sử dụng lệnh này!', threadID);
+    }
 
-        if (cmd === 'antilink') {
-            if (!isSubAdmin(senderID)) return;
-            settings.anti_link = args[0] === 'on';
-            saveJSON(SETTINGS_FILE, settings);
-            return api.sendMessage(`🛡️ Anti-Link: ${settings.anti_link ? 'BẬT 🟢' : 'TẮT 🔴'}`, threadID);
-        }
+    const status = (args[0] || '').toLowerCase();
 
+    if (status !== 'on' && status !== 'off') {
+        return api.sendMessage(
+            '📌 Cách dùng:\n' +
+            `${prefix}antispam on - Bật Anti-Spam\n` +
+            `${prefix}antispam off - Tắt Anti-Spam`,
+            threadID
+        );
+    }
+
+    settings.anti_spam = status === 'on';
+    saveJSON(SETTINGS_FILE, settings);
+
+    return api.sendMessage(
+        `🛡️ Anti-Spam: ${settings.anti_spam ? 'BẬT 🟢' : 'TẮT 🔴'}`,
+        threadID
+    );
+}
+
+if (cmd === 'antilink') {
+    if (!isSubAdmin(senderID)) {
+        return api.sendMessage('❌ Bạn không có quyền sử dụng lệnh này!', threadID);
+    }
+
+    const status = (args[0] || '').toLowerCase();
+
+    if (status !== 'on' && status !== 'off') {
+        return api.sendMessage(
+            '📌 Cách dùng:\n' +
+            `${prefix}antilink on - Bật Anti-Link\n` +
+            `${prefix}antilink off - Tắt Anti-Link`,
+            threadID
+        );
+    }
+
+    settings.anti_link = status === 'on';
+    saveJSON(SETTINGS_FILE, settings);
+
+    return api.sendMessage(
+        `🛡️ Anti-Link: ${settings.anti_link ? 'BẬT 🟢' : 'TẮT 🔴'}`,
+        threadID
+    );
+}
         // --- 🧠 MODULE 6: TRÍ TUỆ NHÂN TẠO (AI) ---
         if (cmd === 'ai') {
             let prompt = args.join(' ');
@@ -696,15 +731,60 @@ Gõ ${prefix}buy [mã số] để mua.`;
         }
 
         if (cmd === 'weather') {
-            let loc = args.join(' ') || 'Hanoi';
-            try {
-                let res = await axios.get(`https://wttr.in/${encodeURIComponent(loc)}?format=3`);
-                return api.sendMessage(`🌤️ Thời tiết: ${res.data}`, threadID);
-            } catch (e) {
-                return api.sendMessage('❌ Lỗi tra cứu thời tiết.', threadID);
+    const loc = args.join(' ').trim();
+
+    if (!loc) {
+        return api.sendMessage(
+            '🌤️ Vui lòng nhập tỉnh/thành phố!\n\n' +
+            `📌 Ví dụ:\n` +
+            `${prefix}weather An Giang\n` +
+            `${prefix}weather Bến Tre\n` +
+            `${prefix}weather Hà Nội\n` +
+            `${prefix}weather Bắc Giang\n` +
+            `${prefix}weather Kiên Giang\n` +
+            `${prefix}weather Vĩnh Long`,
+            threadID
+        );
+    }
+
+    try {
+        const res = await axios.get(
+            `https://wttr.in/${encodeURIComponent(loc)}?format=3`,
+            {
+                timeout: 15000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0'
+                }
             }
+        );
+
+        const weather = String(res.data || '').trim();
+
+        if (!weather) {
+            return api.sendMessage(
+                `❌ Không tìm thấy thời tiết cho: ${loc}`,
+                threadID
+            );
         }
 
+        return api.sendMessage(
+            `🌤️ THỜI TIẾT\n` +
+            `📍 ${loc}\n` +
+            `━━━━━━━━━━━━━━\n` +
+            `${weather}`,
+            threadID
+        );
+
+    } catch (error) {
+        console.error('Weather Error:', error.message);
+
+        return api.sendMessage(
+            `❌ Không thể tra cứu thời tiết tại ${loc}.\n` +
+            `🔄 Vui lòng thử lại sau.`,
+            threadID
+        );
+    }
+        }
         if (cmd === 'shorten') {
             let url = args[0];
             if (!url) return api.sendMessage('❌ Nhập URL cần rút gọn.', threadID);
