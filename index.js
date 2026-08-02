@@ -341,7 +341,7 @@ async function handleMessage(api, message) {
             if (botID && mentions[botID]) {
                 const replies = [
                     `${BOT_NAME} nghe đây! Bạn cần trợ giúp gì? Gõ ${prefix}help nhé!`,
-                    `Dạ, em nghe nè! 🚀`,
+                    `Hi bạn tớ Là Kem Bạn cần giúp Gì?`,
                     `mày gay à !?😊`
                 ];
                 api.sendMessage(replies[Math.floor(Math.random() * replies.length)], threadID);
