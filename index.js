@@ -315,12 +315,27 @@ async function handleMessage(api, message) {
             addExp(senderID, 2);
 
             // Kiểm tra Anti-link
-            if (settings.anti_link && (body.includes('http://') || body.includes('https://'))) {
-                if (!isSubAdmin(senderID)) {
-                    api.sendMessage(`⚠️ Cảnh báo: Nhóm không cho phép gửi liên kết!`, threadID);
-                }
+            if (
+    settings.anti_link &&
+    !isSubAdmin(senderID) &&
+    (
+        body.includes('http://') ||
+        body.includes('https://') ||
+        body.includes('www.') ||
+        body.includes('tiktok.com') ||
+        body.includes('facebook.com') ||
+        body.includes('fb.me') ||
+        body.includes('youtube.com') ||
+        body.includes('youtu.be')
+    )
+) {
+    return api.sendMessage(
+        '⚠️ CẢNH BÁO ANTI-LINK\n\n' +
+        '🚫 Nhóm không cho phép gửi liên kết!\n' +
+        '❌ Vui lòng không gửi link trong nhóm.',
+        threadID
+    );
             }
-
             // Tag Bot Phản Hồi
             let botID = getUID(api);
             if (botID && mentions[botID]) {
@@ -550,72 +565,9 @@ async function handleMessage(api, message) {
         }
 
         // --- 🛡️ MODULE 5: BẢO VỆ NHÓM ---
-const spamTracker = new Map();
-
-const SPAM_LIMIT = 10;
-const SPAM_TIME = 10000;
-
-function checkAntiSpam(senderID, threadID) {
-    const key = `${threadID}_${senderID}`;
-    const now = Date.now();
-
-    let data = spamTracker.get(key);
-
-    if (!data || now - data.firstMessage > SPAM_TIME) {
-        data = {
-            firstMessage: now,
-            count: 1
-        };
-
-        spamTracker.set(key, data);
-        return false;
-    }
-
-    data.count++;
-    spamTracker.set(key, data);
-
-    if (data.count >= SPAM_LIMIT) {
-        spamTracker.delete(key);
-        return true;
-    }
-
-    return false;
-}
-
-function containsLink(text) {
-    if (!text) return false;
-
-    return /(https?:\/\/[^\s]+|www\.[^\s]+|facebook\.com\/[^\s]+|fb\.me\/[^\s]+)/i.test(text);
-}
-        if (settings.anti_spam && event.body) {
-    if (!isSubAdmin(senderID)) {
-        if (checkAntiSpam(senderID, threadID)) {
-            return api.sendMessage(
-                `⚠️ CẢNH BÁO ANTI-SPAM\n\n` +
-                `👤 Người gửi: ${senderID}\n` +
-                `🚫 Bạn đang gửi tin nhắn quá nhanh!`,
-                threadID
-            );
-        }
-    }
-}
-
-if (settings.anti_link && event.body) {
-    if (!isSubAdmin(senderID)) {
-        if (containsLink(event.body)) {
-            return api.sendMessage(
-                `🔗 CẢNH BÁO ANTI-LINK\n\n` +
-                `👤 Người gửi: ${senderID}\n` +
-                `🚫 Nhóm không cho phép gửi liên kết!`,
-                threadID
-            );
-        }
-    }
-}
-        // ==========================================
+        // ================================
 // 🛡️ LỆNH ANTISPAM
-// ==========================================
-
+// ================================
 if (cmd === 'antispam') {
 
     if (!isSubAdmin(senderID)) {
@@ -628,43 +580,30 @@ if (cmd === 'antispam') {
     const status = (args[0] || '').toLowerCase();
 
     if (status !== 'on' && status !== 'off') {
-
         return api.sendMessage(
-            `🛡️ ANTI-SPAM\n\n` +
-            `📌 Cách sử dụng:\n\n` +
-            `${prefix}antispam on\n` +
-            `➡️ Bật Anti-Spam 🟢\n\n` +
-            `${prefix}antispam off\n` +
-            `➡️ Tắt Anti-Spam 🔴\n\n` +
-            `📊 Giới hạn: ${SPAM_LIMIT} tin / ${SPAM_TIME / 1000} giây`,
+            `🛡️ ANTISPAM\n\n` +
+            `${prefix}antispam on - Bật Anti-Spam 🟢\n` +
+            `${prefix}antispam off - Tắt Anti-Spam 🔴`,
             threadID
         );
     }
 
     settings.anti_spam = status === 'on';
 
-    saveJSON(
-        SETTINGS_FILE,
-        settings
-    );
+    saveJSON(SETTINGS_FILE, settings);
 
     return api.sendMessage(
-        `🛡️ ANTI-SPAM\n\n` +
-        `📌 Trạng thái: ${
-            settings.anti_spam
-                ? 'BẬT 🟢'
-                : 'TẮT 🔴'
-        }\n\n` +
-        `📊 Giới hạn: ${SPAM_LIMIT} tin / ${SPAM_TIME / 1000} giây`,
+        `🛡️ Anti-Spam đã ${
+            settings.anti_spam ? 'BẬT 🟢' : 'TẮT 🔴'
+        }`,
         threadID
     );
 }
 
 
-// ==========================================
+// ================================
 // 🔗 LỆNH ANTILINK
-// ==========================================
-
+// ================================
 if (cmd === 'antilink') {
 
     if (!isSubAdmin(senderID)) {
@@ -677,35 +616,25 @@ if (cmd === 'antilink') {
     const status = (args[0] || '').toLowerCase();
 
     if (status !== 'on' && status !== 'off') {
-
         return api.sendMessage(
-            `🔗 ANTI-LINK\n\n` +
-            `📌 Cách sử dụng:\n\n` +
-            `${prefix}antilink on\n` +
-            `➡️ Bật Anti-Link 🟢\n\n` +
-            `${prefix}antilink off\n` +
-            `➡️ Tắt Anti-Link 🔴`,
+            `🔗 ANTILINK\n\n` +
+            `${prefix}antilink on - Bật Anti-Link 🟢\n` +
+            `${prefix}antilink off - Tắt Anti-Link 🔴`,
             threadID
         );
     }
 
     settings.anti_link = status === 'on';
 
-    saveJSON(
-        SETTINGS_FILE,
-        settings
-    );
+    saveJSON(SETTINGS_FILE, settings);
 
     return api.sendMessage(
-        `🔗 ANTI-LINK\n\n` +
-        `📌 Trạng thái: ${
-            settings.anti_link
-                ? 'BẬT 🟢'
-                : 'TẮT 🔴'
+        `🔗 Anti-Link đã ${
+            settings.anti_link ? 'BẬT 🟢' : 'TẮT 🔴'
         }`,
         threadID
     );
-}
+        }
         // --- 🧠 MODULE 6: TRÍ TUỆ NHÂN TẠO (AI) ---
         if (cmd === 'ai') {
             let prompt = args.join(' ');
