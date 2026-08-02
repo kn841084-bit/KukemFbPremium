@@ -315,27 +315,17 @@ async function handleMessage(api, message) {
             addExp(senderID, 2);
 
             // Kiểm tra Anti-link
-            if (
-    settings.anti_link &&
-    !isSubAdmin(senderID) &&
-    (
-        body.includes('http://') ||
-        body.includes('https://') ||
-        body.includes('www.') ||
-        body.includes('tiktok.com') ||
-        body.includes('facebook.com') ||
-        body.includes('fb.me') ||
-        body.includes('youtube.com') ||
-        body.includes('youtu.be')
-    )
-) {
-    return api.sendMessage(
-        '⚠️ CẢNH BÁO ANTI-LINK\n\n' +
-        '🚫 Nhóm không cho phép gửi liên kết!\n' +
-        '❌ Vui lòng không gửi link trong nhóm.',
+ if (containsLink(body) && settings.anti_link && !isSubAdmin(senderID)) {
+
+    api.sendMessage(
+        "🚫 Cấm gửi liên kết!\n⚠️ Bạn sẽ bị xóa khỏi nhóm.",
         threadID
     );
-            }
+
+    api.removeUserFromGroup(senderID, threadID);
+
+    return;
+ }
             // Tag Bot Phản Hồi
             let botID = getUID(api);
             if (botID && mentions[botID]) {
